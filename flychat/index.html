@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlyChat - 消息</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- PC Sidebar -->
+    <nav class="sidebar">
+      <div style="padding: 16px; text-align: center; border-bottom: 1px solid var(--border);">
+        <h1 style="font-size: 18px; color: var(--primary);">🐦 FlyChat</h1>
+      </div>
+      <div style="flex: 1; padding: 8px 0;">
+        <a href="index.html" class="nav-item active" style="display:flex;align-items:center;gap:10px;padding:10px 20px;background:var(--primary-light);color:var(--primary);font-size:14px;">
+          <span>💬</span> 消息
+          <span class="conv-unread" style="margin-left:auto;">8</span>
+        </a>
+        <a href="contacts.html" class="nav-item" style="display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:14px;color:var(--text-secondary);">
+          <span>👥</span> 通讯录
+        </a>
+        <a href="workspace.html" class="nav-item" style="display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:14px;color:var(--text-secondary);">
+          <span>🏢</span> 工作台
+        </a>
+        <a href="profile.html" class="nav-item" style="display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:14px;color:var(--text-secondary);">
+          <span>👤</span> 我
+        </a>
+      </div>
+      <div style="padding: 12px; border-top: 1px solid var(--border); text-align: center;">
+        <div style="font-size: 11px; color: var(--text-tertiary);">FlyChat v1.0</div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="header">
+        <h1>消息</h1>
+        <div class="header-actions">
+          <button title="创建群聊">➕</button>
+          <button title="搜索">🔍</button>
+        </div>
+      </div>
+      <div class="search-box">
+        <input type="text" placeholder="搜索联系人、群组或消息..." id="searchInput" oninput="filterConversations()">
+      </div>
+      <div class="conv-list" id="convList"></div>
+    </div>
+  </div>
+
+  <!-- Mobile Tab Bar -->
+  <div class="tab-bar">
+    <a href="index.html" class="tab active">
+      <span class="tab-icon">💬</span>
+      <span>消息</span>
+      <span class="badge">8</span>
+    </a>
+    <a href="contacts.html" class="tab">
+      <span class="tab-icon">👥</span>
+      <span>通讯录</span>
+    </a>
+    <a href="workspace.html" class="tab">
+      <span class="tab-icon">🏢</span>
+      <span>工作台</span>
+    </a>
+    <a href="profile.html" class="tab">
+      <span class="tab-icon">👤</span>
+      <span>我</span>
+    </a>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script>
+    function renderConversations(list) {
+      const container = document.getElementById('convList');
+      container.innerHTML = list.map(c => `
+        <a href="chat.html?id=${c.id}" class="conv-item${c.pinned ? ' active' : ''}">
+          <div class="conv-avatar">${c.avatar}</div>
+          <div class="conv-info">
+            <div class="conv-name">
+              ${c.name}
+              ${c.pinned ? '<span class="pin">📌</span>' : ''}
+              ${c.muted ? '<span class="mute">🔇</span>' : ''}
+            </div>
+            <div class="conv-last">${c.lastMsg}</div>
+          </div>
+          <div class="conv-meta">
+            <div class="conv-time">${c.time}</div>
+            ${c.unread > 0 ? `<div class="conv-unread">${c.unread}</div>` : ''}
+          </div>
+        </a>
+      `).join('');
+    }
+
+    function filterConversations() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = FlyChat.conversations.filter(c =>
+        c.name.toLowerCase().includes(q) || c.lastMsg.toLowerCase().includes(q)
+      );
+      renderConversations(filtered);
+    }
+
+    renderConversations(FlyChat.conversations);
+  </script>
+</body>
+</html>

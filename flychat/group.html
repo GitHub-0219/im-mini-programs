@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlyChat - 群组管理</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <button class="back-btn" onclick="history.back()">←</button>
+      <h2>群组管理</h2>
+    </div>
+
+    <div style="flex:1;overflow-y:auto;">
+      <!-- Group Info -->
+      <div class="group-header">
+        <div class="group-avatar" id="groupAvatar">前</div>
+        <div class="group-name" id="groupName">前端技术群</div>
+        <div class="group-count" id="groupCount">6人</div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;justify-content:center;gap:24px;padding:16px;background:var(--bg-white);border-bottom:1px solid var(--border);">
+        <div style="text-align:center;cursor:pointer;">
+          <div style="font-size:24px;">📢</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">群公告</div>
+        </div>
+        <div style="text-align:center;cursor:pointer;">
+          <div style="font-size:24px;">📁</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">群文件</div>
+        </div>
+        <div style="text-align:center;cursor:pointer;">
+          <div style="font-size:24px;">🖼️</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">群相册</div>
+        </div>
+        <div style="text-align:center;cursor:pointer;" onclick="location.href='chat.html?id=c002'">
+          <div style="font-size:24px;">💬</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">发消息</div>
+        </div>
+      </div>
+
+      <!-- Members -->
+      <div class="group-section">
+        <h3>群成员 (${FlyChat.groupMembers.length}人)</h3>
+        <div class="group-members-grid">
+          <div id="memberGrid"></div>
+        </div>
+      </div>
+
+      <!-- Announcements -->
+      <div class="group-section">
+        <h3>群公告</h3>
+        <div id="announcementList"></div>
+      </div>
+
+      <!-- Files -->
+      <div class="group-section">
+        <h3>群文件</h3>
+        <div id="fileList"></div>
+      </div>
+
+      <!-- Group Settings -->
+      <div class="group-section">
+        <h3>群设置</h3>
+        <div style="background:var(--bg-white);border-radius:var(--radius);overflow:hidden;">
+          <div class="profile-menu-item">
+            <span class="menu-icon">🔔</span>
+            <span class="menu-text">消息免打扰</span>
+            <span class="menu-value">关闭</span>
+            <span class="menu-arrow">›</span>
+          </div>
+          <div class="profile-menu-item">
+            <span class="menu-icon">📌</span>
+            <span class="menu-text">置顶聊天</span>
+            <span class="menu-value">开启</span>
+            <span class="menu-arrow">›</span>
+          </div>
+          <div class="profile-menu-item">
+            <span class="menu-icon">👥</span>
+            <span class="menu-text">我在本群的昵称</span>
+            <span class="menu-value">张三</span>
+            <span class="menu-arrow">›</span>
+          </div>
+          <div class="profile-menu-item">
+            <span class="menu-icon">🚫</span>
+            <span class="menu-text">群管理</span>
+            <span class="menu-arrow">›</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:16px;">
+        <button class="btn btn-danger" style="width:100%;">退出群聊</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script>
+    // Group info
+    const gi = FlyChat.groupInfo;
+    document.getElementById('groupAvatar').textContent = gi.avatar;
+    document.getElementById('groupName').textContent = gi.name;
+    document.getElementById('groupCount').textContent = gi.count + '人';
+
+    // Members
+    document.getElementById('memberGrid').innerHTML = `
+      <div class="group-members-grid">
+        ${FlyChat.groupMembers.map(m => `
+          <div class="group-member">
+            <div class="member-avatar" style="background:${m.role === 'admin' ? 'var(--primary)' : '#E8EAED'};color:${m.role === 'admin' ? '#fff' : 'var(--text-primary)'};">${m.avatar}</div>
+            <div class="member-name">${m.name}${m.role === 'admin' ? ' 👑' : ''}</div>
+          </div>
+        `).join('')}
+        <div class="group-member">
+          <div class="member-avatar" style="background:var(--bg-page);color:var(--text-tertiary);border:2px dashed var(--border);">+</div>
+          <div class="member-name">邀请</div>
+        </div>
+      </div>
+    `;
+
+    // Announcements
+    document.getElementById('announcementList').innerHTML = FlyChat.announcements.map(a =>
+      `<div class="announcement-item"><div style="font-weight:500;margin-bottom:4px;">${a.author} · ${a.time}</div>${a.content}</div>`
+    ).join('');
+
+    // Files
+    document.getElementById('fileList').innerHTML = FlyChat.groupFiles.map(f => {
+      const ext = f.name.split('.').pop();
+      const icon = { docx: '📄', pdf: '📕', json: '📋', xlsx: '📊' }[ext] || '📁';
+      return `<div class="file-item"><span class="file-icon">${icon}</span><div class="file-info"><div class="file-name">${f.name}</div><div class="file-meta">${f.size} · ${f.uploader} · ${f.time}</div></div></div>`;
+    }).join('');
+  </script>
+</body>
+</html>

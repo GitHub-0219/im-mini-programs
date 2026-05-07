@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlyChat - 聊天</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <button class="back-btn" onclick="history.back()">←</button>
+      <h2 id="chatTitle">聊天</h2>
+      <span class="member-count" id="memberCount"></span>
+      <div class="header-actions" style="margin-left:auto;">
+        <button title="通话">📞</button>
+        <button title="群管理" onclick="location.href='group.html'">⚙️</button>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages"></div>
+
+    <!-- @ Mention Panel -->
+    <div class="at-panel" id="atPanel"></div>
+
+    <div class="chat-input-bar">
+      <div class="func-panel" id="funcPanel">
+        <div class="func-grid">
+          <div class="func-item"><div class="func-icon">📷</div><div class="func-label">拍照</div></div>
+          <div class="func-item"><div class="func-icon">🖼️</div><div class="func-label">相册</div></div>
+          <div class="func-item"><div class="func-icon">📁</div><div class="func-label">文件</div></div>
+          <div class="func-item"><div class="func-icon">📍</div><div class="func-label">位置</div></div>
+          <div class="func-item"><div class="func-icon">📇</div><div class="func-label">名片</div></div>
+          <div class="func-item"><div class="func-icon">📋</div><div class="func-label">日程</div></div>
+          <div class="func-item"><div class="func-icon">📊</div><div class="func-label">投票</div></div>
+          <div class="func-item"><div class="func-icon">⏰</div><div class="func-label">提醒</div></div>
+        </div>
+      </div>
+      <div class="input-toolbar">
+        <button onclick="toggleFuncPanel()" title="更多">➕</button>
+        <textarea class="chat-input" id="msgInput" placeholder="输入消息..." rows="1" oninput="autoResize(this)" onkeydown="handleKeyDown(event)"></textarea>
+        <button class="send-btn" onclick="sendMessage()">发送</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Context Menu -->
+  <div class="msg-context-menu" id="contextMenu" style="display:none;">
+    <div class="menu-item" onclick="replyMsg()">↩️ 回复</div>
+    <div class="menu-item" onclick="forwardMsg()">↗️ 转发</div>
+    <div class="menu-item" onclick="copyMsg()">📋 复制</div>
+    <div class="menu-item" onclick="recallMsg()" id="recallBtn">🗑️ 撤回</div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const convId = urlParams.get('id') || 'c001';
+    const conv = FlyChat.conversations.find(c => c.id === convId);
+    const msgs = FlyChat.messages[convId] || [];
+
+    document.getElementById('chatTitle').textContent = conv ? conv.name : '聊天';
+    if (conv && conv.type === 'group') {
+      document.getElementById('memberCount').textContent = `(${FlyChat.groupMembers.length}人)`;
+    }
+
+    function renderMessages() {
+      const container = document.getElementById('chatMessages');
+      let html = '<div class="msg-time-divider">今天 10:00</div>';
+      msgs.forEach(msg => {
+        const isSelf = msg.sender === FlyChat.currentUser.id;
+        const avatarClass = isSelf ? 'self-av' : 'other';
+        let bubbleContent = '';
+
+        if (msg.type === 'text') {
+          let text = msg.content;
+          if (msg.atUser) text = text.replace(`@${msg.atUser}`, `<span class="msg-at">@${msg.atUser}</span>`);
+          if (msg.replyTo) {
+            const refMsg = msgs.find(m => m.id === msg.replyTo);
+            if (refMsg) {
+              bubbleContent += `<div class="msg-reply-ref">${refMsg.name}: ${refMsg.content}</div>`;
+            }
+          }
+          bubbleContent += text;
+        } else if (msg.type === 'file') {
+          bubbleContent = `<div class="msg-file"><span class="file-icon">📄</span><div class="file-info"><div class="file-name">${msg.content}</div><div class="file-size">${msg.fileSize}</div></div></div>`;
+        } else if (msg.type === 'voice') {
+          bubbleContent = `<div class="voice-msg"><span class="voice-icon">🎤</span><span>${msg.duration}</span></div>`;
+        } else if (msg.type === 'image') {
+          bubbleContent = `<div class="msg-image" style="width:150px;height:100px;background:#ddd;border-radius:8px;display:flex;align-items:center;justify-content:center;">📷 图片</div>`;
+        }
+
+        const statusIcon = msg.status === 'read' ? '✓✓' : msg.status === 'delivered' ? '✓✓' : '✓';
+        const statusColor = msg.status === 'read' ? 'var(--primary)' : 'var(--text-tertiary)';
+
+        html += `
+          <div class="msg-item ${isSelf ? 'self' : 'other'}" data-id="${msg.id}" oncontextmenu="showContextMenu(event, '${msg.id}', ${isSelf})">
+            <div class="msg-avatar ${avatarClass}">${msg.avatar}</div>
+            <div class="msg-body">
+              ${!isSelf ? `<div class="msg-sender">${msg.name}</div>` : ''}
+              <div class="msg-bubble">${bubbleContent}</div>
+              <div class="msg-status" style="color:${statusColor}">${statusIcon} ${msg.time}</div>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+      container.scrollTop = container.scrollHeight;
+    }
+
+    let selectedMsgId = null;
+    let selectedIsSelf = false;
+
+    function showContextMenu(e, msgId, isSelf) {
+      e.preventDefault();
+      selectedMsgId = msgId;
+      selectedIsSelf = isSelf;
+      const menu = document.getElementById('contextMenu');
+      document.getElementById('recallBtn').style.display = isSelf ? 'block' : 'none';
+      menu.style.display = 'block';
+      menu.style.left = e.clientX + 'px';
+      menu.style.top = e.clientY + 'px';
+    }
+
+    document.addEventListener('click', () => {
+      document.getElementById('contextMenu').style.display = 'none';
+    });
+
+    function replyMsg() {
+      const msg = msgs.find(m => m.id === selectedMsgId);
+      if (msg) {
+        document.getElementById('msgInput').value = `> ${msg.name}: ${msg.content}\n`;
+        document.getElementById('msgInput').focus();
+      }
+    }
+
+    function forwardMsg() { alert('转发功能（演示）'); }
+    function copyMsg() {
+      const msg = msgs.find(m => m.id === selectedMsgId);
+      if (msg) navigator.clipboard?.writeText(msg.content);
+    }
+    function recallMsg() { alert('消息已撤回（演示）'); }
+
+    function toggleFuncPanel() {
+      document.getElementById('funcPanel').classList.toggle('show');
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('msgInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const newMsg = {
+        id: 'm' + Date.now(),
+        sender: FlyChat.currentUser.id,
+        name: FlyChat.currentUser.name,
+        avatar: FlyChat.currentUser.avatar,
+        type: 'text',
+        content: text,
+        time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+        status: 'sent'
+      };
+
+      msgs.push(newMsg);
+      input.value = '';
+      input.style.height = 'auto';
+      renderMessages();
+    }
+
+    function handleKeyDown(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+      if (e.key === '@') {
+        showAtPanel();
+      }
+    }
+
+    function showAtPanel() {
+      const panel = document.getElementById('atPanel');
+      panel.innerHTML = FlyChat.groupMembers.map(m =>
+        `<div class="at-item" onclick="insertAt('${m.name}')"><div class="conv-avatar" style="width:28px;height:28px;font-size:12px;border-radius:6px;">${m.avatar}</div>${m.name}</div>`
+      ).join('');
+      panel.classList.add('show');
+    }
+
+    function insertAt(name) {
+      const input = document.getElementById('msgInput');
+      input.value += name + ' ';
+      input.focus();
+      document.getElementById('atPanel').classList.remove('show');
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.at-panel')) {
+        document.getElementById('atPanel').classList.remove('show');
+      }
+    });
+
+    function autoResize(el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+    }
+
+    renderMessages();
+  </script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlyChat - 工作台</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <nav class="sidebar">
+      <div style="padding:16px;text-align:center;border-bottom:1px solid var(--border);">
+        <h1 style="font-size:18px;color:var(--primary);">🐦 FlyChat</h1>
+      </div>
+      <div style="flex:1;padding:8px 0;">
+        <a href="index.html" style="display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:14px;color:var(--text-secondary);">💬 消息</a>
+        <a href="contacts.html" style="display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:14px;color:var(--text-secondary);">👥 通讯录</a>
+        <a href="workspace.html" style="display:flex;align-items:center;gap:10px;padding:10px 20px;background:var(--primary-light);color:var(--primary);font-size:14px;">🏢 工作台</a>
+        <a href="profile.html" style="display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:14px;color:var(--text-secondary);">👤 我</a>
+      </div>
+    </nav>
+
+    <div class="main-content">
+      <div class="header">
+        <h1>工作台</h1>
+        <div class="header-actions">
+          <button title="设置">⚙️</button>
+        </div>
+      </div>
+      <div style="flex:1;overflow-y:auto;">
+        <!-- Quick Actions -->
+        <div class="workspace-grid">
+          <div class="ws-card"><div class="ws-icon">📝</div><div class="ws-title">日程</div><div class="ws-desc">管理日程安排</div></div>
+          <div class="ws-card"><div class="ws-icon">✅</div><div class="ws-title">待办</div><div class="ws-desc">任务清单</div></div>
+          <div class="ws-card"><div class="ws-icon">📋</div><div class="ws-title">审批</div><div class="ws-desc">流程审批</div></div>
+          <div class="ws-card"><div class="ws-icon">📄</div><div class="ws-title">文档</div><div class="ws-desc">在线协作</div></div>
+          <div class="ws-card"><div class="ws-icon">⏰</div><div class="ws-title">打卡</div><div class="ws-desc">签到签退</div></div>
+          <div class="ws-card"><div class="ws-icon">📊</div><div class="ws-title">汇报</div><div class="ws-desc">日报周报</div></div>
+          <div class="ws-card"><div class="ws-icon">📹</div><div class="ws-title">会议</div><div class="ws-desc">视频会议</div></div>
+          <div class="ws-card"><div class="ws-icon">📁</div><div class="ws-title">云盘</div><div class="ws-desc">文件管理</div></div>
+        </div>
+
+        <!-- Today's Schedule -->
+        <div class="ws-section">
+          <h3>📅 今日日程</h3>
+          <div id="scheduleList"></div>
+        </div>
+
+        <!-- Todos -->
+        <div class="ws-section">
+          <h3>✅ 待办事项</h3>
+          <div id="todoList"></div>
+        </div>
+
+        <!-- Approvals -->
+        <div class="ws-section">
+          <h3>📋 审批中心</h3>
+          <div id="approvalList"></div>
+        </div>
+
+        <!-- Check-in -->
+        <div class="ws-section">
+          <h3>⏰ 打卡签到</h3>
+          <div style="background:var(--bg-white);border-radius:var(--radius-lg);padding:20px;text-align:center;">
+            <div style="font-size:36px;font-weight:700;color:var(--primary);" id="currentTime">--:--</div>
+            <div style="font-size:13px;color:var(--text-tertiary);margin-top:4px;" id="currentDate"></div>
+            <button class="btn btn-primary" style="margin-top:16px;padding:12px 48px;font-size:16px;border-radius:24px;" onclick="clockIn()">打卡签到</button>
+            <div style="margin-top:12px;display:flex;justify-content:center;gap:32px;font-size:13px;">
+              <div><span style="color:var(--text-tertiary);">上班 09:00</span><br><span style="color:var(--success);font-weight:500;" id="clockInTime">08:55 已打卡</span></div>
+              <div><span style="color:var(--text-tertiary);">下班 18:00</span><br><span style="color:var(--text-tertiary);" id="clockOutTime">未打卡</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <a href="index.html" class="tab"><span class="tab-icon">💬</span><span>消息</span></a>
+    <a href="contacts.html" class="tab"><span class="tab-icon">👥</span><span>通讯录</span></a>
+    <a href="workspace.html" class="tab active"><span class="tab-icon">🏢</span><span>工作台</span></a>
+    <a href="profile.html" class="tab"><span class="tab-icon">👤</span><span>我</span></a>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script>
+    // Schedule
+    document.getElementById('scheduleList').innerHTML = FlyChat.schedule.map(s =>
+      `<div class="schedule-item"><div class="sch-time">${s.time}</div><div class="sch-dot"></div><div class="sch-content"><div class="sch-title">${s.title}</div><div class="sch-location">${s.location}</div></div></div>`
+    ).join('');
+
+    // Todos
+    document.getElementById('todoList').innerHTML = FlyChat.todos.map(t =>
+      `<div class="todo-item"><div class="todo-check${t.done ? ' done' : ''}" onclick="this.classList.toggle('done');this.nextElementSibling.classList.toggle('done');">${t.done ? '✓' : ''}</div><div class="todo-text${t.done ? ' done' : ''}">${t.text}</div><div class="todo-due">${t.due}</div></div>`
+    ).join('');
+
+    // Approvals
+    document.getElementById('approvalList').innerHTML = FlyChat.approvals.map(a =>
+      `<div class="approval-card"><span class="approval-type">${a.type}</span><div class="approval-title">${a.title}</div><div class="approval-info">${a.info}</div><span class="approval-status ${a.status}">${a.status === 'pending' ? '待审批' : a.status === 'approved' ? '已通过' : '已拒绝'}</span></div>`
+    ).join('');
+
+    // Clock
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('currentTime').textContent = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+      document.getElementById('currentDate').textContent = now.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    function clockIn() {
+      const now = new Date();
+      document.getElementById('clockOutTime').textContent = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) + ' 已打卡';
+      document.getElementById('clockOutTime').style.color = 'var(--success)';
+    }
+  </script>
+</body>
+</html>
