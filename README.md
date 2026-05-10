@@ -38,19 +38,25 @@
 ```
 im-mini-programs/
 ├── flychat/                # 🦅 FlyChat（飞书风格）
-│   ├── chat/               #   聊天模块
-│   ├── contacts/           #   通讯录模块
-│   ├── group/              #   群组模块
-│   ├── profile/            #   个人中心
-│   ├── workspace/          #   工作台
+│   ├── index.html          #   入口页面
+│   ├── chat.html           #   聊天页面
+│   ├── contacts.html       #   通讯录页面
+│   ├── group.html          #   群组页面
+│   ├── profile.html        #   个人中心页面
+│   ├── workspace.html      #   工作台页面
+│   ├── README.md           #   项目说明
+│   ├── css/                #   样式文件
+│   ├── js/                 #   脚本文件
 │   └── docs/               #   开发文档
 ├── worktalk/               # 💼 WorkTalk（微信/钉钉风格）
-│   ├── chat/               #   聊天模块
-│   ├── contacts/           #   通讯录模块
-│   ├── group/              #   群组模块
-│   ├── profile/            #   个人中心
-│   ├── workspace/          #   工作台
-│   └── docs/               #   开发文档
+│   ├── index.html          #   入口页面
+│   ├── chat.html           #   聊天页面
+│   ├── contacts.html       #   通讯录页面
+│   ├── profile.html        #   个人中心页面
+│   ├── README.md           #   项目说明
+│   └── css/                #   样式文件
+├── .gitignore
+├── LICENSE
 └── README.md
 ```
 
@@ -67,8 +73,7 @@ cd im-mini-programs
 # 文件 → 导入项目 → 选择 flychat/ 或 worktalk/ 目录
 
 # 查看开发文档
-cat flychat/docs/README.md
-cat worktalk/docs/README.md
+cat flychat/docs/开发文档.md
 ```
 
 ### 开发环境要求
@@ -82,8 +87,6 @@ cat worktalk/docs/README.md
 ---
 
 ## 📸 截图
-
-<!-- 请在此处添加小程序截图 -->
 
 | FlyChat 聊天 | WorkTalk 通讯录 | 群组管理 |
 |--------------|-----------------|----------|
