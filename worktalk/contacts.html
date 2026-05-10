@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WorkTalk - 通讯录</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="contacts-container">
+    <nav class="sidebar">
+      <div style="padding:16px;text-align:center;border-bottom:1px solid var(--border);">
+        <h1 style="font-size:18px;color:var(--primary);">💼 WorkTalk</h1>
+      </div>
+      <div style="flex:1;padding:8px 0;">
+        <a href="index.html" style="display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:14px;color:var(--text-secondary);">💬 消息</a>
+        <a href="contacts.html" style="display:flex;align-items:center;gap:10px;padding:10px 20px;background:var(--primary-light);color:var(--primary);font-size:14px;">👥 通讯录</a>
+        <a href="profile.html" style="display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:14px;color:var(--text-secondary);">👤 我</a>
+      </div>
+    </nav>
+
+    <div class="contacts-list" id="contactsList">
+      <div class="header"><h1>通讯录</h1></div>
+      <div class="search-box">
+        <input type="text" placeholder="搜索联系人..." oninput="filterContacts(this.value)">
+      </div>
+      <div class="org-tree" id="orgTree"></div>
+      <div id="contactsContent"></div>
+    </div>
+
+    <div class="main-content" id="contactDetail">
+      <div class="contact-detail" id="detailContent">
+        <div style="color:var(--text-tertiary);margin-top:100px;font-size:14px;">← 选择一个联系人查看详情</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <a href="index.html" class="tab"><span class="tab-icon">💬</span><span>消息</span></a>
+    <a href="contacts.html" class="tab active"><span class="tab-icon">👥</span><span>通讯录</span></a>
+    <a href="profile.html" class="tab"><span class="tab-icon">👤</span><span>我</span></a>
+  </div>
+
+  <div class="letter-index" id="letterIndex"></div>
+
+  <script>
+    const WT = {
+      contacts: {
+        'C': [
+          { id:'u004', name:'陈浩', avatar:'陈', title:'后端工程师', dept:'技术部' },
+          { id:'u010', name:'程鹏', avatar:'程', title:'运营经理', dept:'运营部' },
+        ],
+        'L': [
+          { id:'u002', name:'李婷', avatar:'李', title:'UI设计师', dept:'设计部' },
+          { id:'u005', name:'刘洋', avatar:'刘', title:'技术总监', dept:'管理层' },
+        ],
+        'S': [
+          { id:'u006', name:'孙丽', avatar:'孙', title:'测试工程师', dept:'质量部' },
+        ],
+        'W': [
+          { id:'u003', name:'王磊', avatar:'王', title:'前端工程师', dept:'技术部' },
+          { id:'u008', name:'吴敏', avatar:'吴', title:'HR专员', dept:'人力资源部' },
+        ],
+        'Z': [
+          { id:'u001', name:'张明', avatar:'张', title:'产品经理', dept:'产品部' },
+          { id:'u007', name:'周伟', avatar:'周', title:'项目经理', dept:'项目管理部' },
+          { id:'u009', name:'赵总', avatar:'赵', title:'CEO', dept:'管理层' },
+        ],
+      },
+      orgTree: [
+        { id:'org1', name:'星辰科技有限公司', type:'company', children:[
+          { id:'org2', name:'技术部', type:'dept', children:[
+            { id:'org2-1', name:'前端组', type:'team', members:['王磊'] },
+            { id:'org2-2', name:'后端组', type:'team', members:['陈浩'] },
+          ]},
+          { id:'org3', name:'产品部', type:'dept', children:[
+            { id:'org3-1', name:'产品组', type:'team', members:['张明'] },
+          ]},
+          { id:'org4', name:'设计部', type:'dept', children:[
+            { id:'org4-1', name:'UI组', type:'team', members:['李婷'] },
+          ]},
+          { id:'org5', name:'人力资源部', type:'dept', children:[
+            { id:'org5-1', name:'HR组', type:'team', members:['吴敏'] },
+          ]},
+          { id:'org6', name:'管理层', type:'dept', children:[
+            { id:'org6-1', name:'高管', type:'team', members:['赵总', '刘洋'] },
+          ]},
+        ]},
+      ]
+    };
+
+    function renderOrgTree() {
+      const container = document.getElementById('orgTree');
+      container.innerHTML = WT.orgTree.map(org => renderOrgNode(org, 0)).join('');
+    }
+
+    function renderOrgNode(node, depth) {
+      const icon = node.type === 'company' ? '🏢' : node.type === 'dept' ? '📂' : '👥';
+      let html = `<div class="org-node" style="padding-left:${16 + depth * 20}px" onclick="toggleOrg(this)">
+        <span class="arrow" id="arrow-${node.id}">▶</span>
+        <span class="node-icon">${icon}</span>
+        <span>${node.name}</span>
+      </div>`;
+      if (node.children || node.members) {
+        html += `<div class="org-children" id="children-${node.id}">`;
+        if (node.children) node.children.forEach(child => { html += renderOrgNode(child, depth + 1); });
+        if (node.members) node.members.forEach(m => {
+          html += `<div class="org-node" style="padding-left:${36 + depth * 20}px"><span class="node-icon">👤</span><span>${m}</span></div>`;
+        });
+        html += '</div>';
+      }
+      return html;
+    }
+
+    function toggleOrg(el) {
+      const id = el.nextElementSibling?.id?.replace('children-', '');
+      const children = document.getElementById('children-' + id);
+      const arrow = document.getElementById('arrow-' + id);
+      if (children) { children.classList.toggle('show'); arrow?.classList.toggle('open'); }
+    }
+
+    function renderContacts() {
+      const container = document.getElementById('contactsContent');
+      const letters = Object.keys(WT.contacts).sort();
+      let html = '';
+      letters.forEach(letter => {
+        html += `<div class="contact-group-title" id="letter-${letter}">${letter}</div>`;
+        WT.contacts[letter].forEach(c => {
+          html += `<div class="contact-item" onclick="showContactDetail('${c.id}')">
+            <div class="contact-avatar" style="background:#E8EAED;color:var(--text-primary);">${c.avatar}</div>
+            <div class="contact-name">${c.name}</div>
+          </div>`;
+        });
+      });
+      container.innerHTML = html;
+
+      const indexContainer = document.getElementById('letterIndex');
+      indexContainer.innerHTML = letters.map(l => `<a href="#letter-${l}">${l}</a>`).join('');
+    }
+
+    function showContactDetail(id) {
+      let contact = null;
+      Object.values(WT.contacts).forEach(group => { const found = group.find(c => c.id === id); if (found) contact = found; });
+      if (!contact) return;
+      document.getElementById('detailContent').innerHTML = `
+        <div class="detail-avatar">${contact.avatar}</div>
+        <div class="detail-name">${contact.name}</div>
+        <div class="detail-title">${contact.title} · ${contact.dept}</div>
+        <div class="detail-actions">
+          <div class="action-btn" onclick="location.href='chat.html?id=c001'"><span class="icon">💬</span><span>发消息</span></div>
+          <div class="action-btn"><span class="icon">📞</span><span>打电话</span></div>
+          <div class="action-btn"><span class="icon">📱</span><span>视频</span></div>
+        </div>
+        <div style="margin-top:24px;width:100%;max-width:360px;">
+          <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);"><span style="color:var(--text-secondary);font-size:13px;">部门</span><span style="font-size:13px;">${contact.dept}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);"><span style="color:var(--text-secondary);font-size:13px;">职位</span><span style="font-size:13px;">${contact.title}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:10px 0;"><span style="color:var(--text-secondary);font-size:13px;">工号</span><span style="font-size:13px;">${id.replace('u','')}</span></div>
+        </div>
+      `;
+    }
+
+    function filterContacts(q) {
+      q = q.toLowerCase();
+      const allContacts = Object.values(WT.contacts).flat();
+      const filtered = allContacts.filter(c => c.name.toLowerCase().includes(q));
+      const container = document.getElementById('contactsContent');
+      container.innerHTML = filtered.map(c => `
+        <div class="contact-item" onclick="showContactDetail('${c.id}')">
+          <div class="contact-avatar" style="background:#E8EAED;color:var(--text-primary);">${c.avatar}</div>
+          <div class="contact-name">${c.name}</div>
+        </div>
+      `).join('');
+    }
+
+    renderOrgTree();
+    renderContacts();
+  </script>
+</body>
+</html>

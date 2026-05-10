@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WorkTalk - 消息</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <nav class="sidebar">
+      <div style="padding:16px;text-align:center;border-bottom:1px solid var(--border);">
+        <h1 style="font-size:18px;color:var(--primary);">💼 WorkTalk</h1>
+      </div>
+      <div style="flex:1;padding:8px 0;">
+        <a href="index.html" class="nav-item active" style="display:flex;align-items:center;gap:10px;padding:10px 20px;background:var(--primary-light);color:var(--primary);font-size:14px;">
+          <span>💬</span> 消息
+          <span class="conv-unread" style="margin-left:auto;">5</span>
+        </a>
+        <a href="contacts.html" class="nav-item" style="display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:14px;color:var(--text-secondary);">
+          <span>👥</span> 通讯录
+        </a>
+        <a href="profile.html" class="nav-item" style="display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:14px;color:var(--text-secondary);">
+          <span>👤</span> 我
+        </a>
+      </div>
+      <div style="padding:12px;border-top:1px solid var(--border);text-align:center;">
+        <div style="font-size:11px;color:var(--text-tertiary);">WorkTalk v1.0</div>
+      </div>
+    </nav>
+
+    <div class="main-content">
+      <div class="header">
+        <h1>消息</h1>
+        <div class="header-actions">
+          <button title="创建群聊">➕</button>
+          <button title="搜索">🔍</button>
+        </div>
+      </div>
+      <div class="search-box">
+        <input type="text" placeholder="搜索联系人、群组或消息..." id="searchInput" oninput="filterConversations()">
+      </div>
+      <div class="conv-list" id="convList"></div>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <a href="index.html" class="tab active">
+      <span class="tab-icon">💬</span>
+      <span>消息</span>
+      <span class="badge">5</span>
+    </a>
+    <a href="contacts.html" class="tab">
+      <span class="tab-icon">👥</span>
+      <span>通讯录</span>
+    </a>
+    <a href="profile.html" class="tab">
+      <span class="tab-icon">👤</span>
+      <span>我</span>
+    </a>
+  </div>
+
+  <script>
+    const WT = {
+      currentUser: { id:'u001', name:'张明', avatar:'张', title:'产品经理', dept:'产品部', status:'在线' },
+      conversations: [
+        { id:'c001', name:'李婷', avatar:'李', type:'private', lastMsg:'产品需求文档已更新', time:'刚刚', unread:2, pinned:true, muted:false },
+        { id:'c002', name:'产品设计组', avatar:'产', type:'group', lastMsg:'王磊: 新原型已上传', time:'10:30', unread:3, pinned:true, muted:false },
+        { id:'c003', name:'陈浩', avatar:'陈', type:'private', lastMsg:'好的，明天开会讨论', time:'09:15', unread:0, pinned:false, muted:false },
+        { id:'c004', name:'技术攻坚群', avatar:'技', type:'group', lastMsg:'刘洋: 接口已联调通过', time:'昨天', unread:0, pinned:false, muted:true },
+        { id:'c005', name:'赵总', avatar:'赵', type:'private', lastMsg:'下周三之前完成', time:'昨天', unread:1, pinned:false, muted:false },
+        { id:'c006', name:'孙丽', avatar:'孙', type:'private', lastMsg:'收到，谢谢！', time:'周一', unread:0, pinned:false, muted:false },
+        { id:'c007', name:'全员通知', avatar:'全', type:'group', lastMsg:'HR: 团建通知', time:'周一', unread:0, pinned:false, muted:true },
+        { id:'c008', name:'周伟', avatar:'周', type:'private', lastMsg:'帮我看看这个方案', time:'上周五', unread:0, pinned:false, muted:false },
+      ]
+    };
+
+    function renderConversations(list) {
+      const container = document.getElementById('convList');
+      container.innerHTML = list.map(c => `
+        <a href="chat.html?id=${c.id}" class="conv-item${c.pinned ? ' active' : ''}">
+          <div class="conv-avatar">${c.avatar}</div>
+          <div class="conv-info">
+            <div class="conv-name">
+              ${c.name}
+              ${c.pinned ? '<span class="pin">📌</span>' : ''}
+              ${c.muted ? '<span class="mute">🔇</span>' : ''}
+            </div>
+            <div class="conv-last">${c.lastMsg}</div>
+          </div>
+          <div class="conv-meta">
+            <div class="conv-time">${c.time}</div>
+            ${c.unread > 0 ? `<div class="conv-unread">${c.unread}</div>` : ''}
+          </div>
+        </a>
+      `).join('');
+    }
+
+    function filterConversations() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = WT.conversations.filter(c =>
+        c.name.toLowerCase().includes(q) || c.lastMsg.toLowerCase().includes(q)
+      );
+      renderConversations(filtered);
+    }
+
+    renderConversations(WT.conversations);
+  </script>
+</body>
+</html>

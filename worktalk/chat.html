@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WorkTalk - 聊天</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <button class="back-btn" onclick="history.back()">←</button>
+      <h2 id="chatTitle">聊天</h2>
+      <span class="member-count" id="memberCount"></span>
+      <div class="header-actions" style="margin-left:auto;">
+        <button title="通话">📞</button>
+        <button title="更多">⚙️</button>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages"></div>
+
+    <div class="chat-input-bar">
+      <div class="func-panel" id="funcPanel">
+        <div class="func-grid">
+          <div class="func-item"><div class="func-icon">📷</div><div class="func-label">拍照</div></div>
+          <div class="func-item"><div class="func-icon">🖼️</div><div class="func-label">相册</div></div>
+          <div class="func-item"><div class="func-icon">📁</div><div class="func-label">文件</div></div>
+          <div class="func-item"><div class="func-icon">📍</div><div class="func-label">位置</div></div>
+          <div class="func-item"><div class="func-icon">📇</div><div class="func-label">名片</div></div>
+          <div class="func-item"><div class="func-icon">📋</div><div class="func-label">日程</div></div>
+          <div class="func-item"><div class="func-icon">📊</div><div class="func-label">投票</div></div>
+          <div class="func-item"><div class="func-icon">⏰</div><div class="func-label">提醒</div></div>
+        </div>
+      </div>
+      <div class="input-toolbar">
+        <button onclick="toggleFuncPanel()" title="更多">➕</button>
+        <textarea class="chat-input" id="msgInput" placeholder="输入消息..." rows="1" oninput="autoResize(this)" onkeydown="handleKeyDown(event)"></textarea>
+        <button class="send-btn" onclick="sendMessage()">发送</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="msg-context-menu" id="contextMenu" style="display:none;">
+    <div class="menu-item" onclick="replyMsg()">↩️ 回复</div>
+    <div class="menu-item" onclick="forwardMsg()">↗️ 转发</div>
+    <div class="menu-item" onclick="copyMsg()">📋 复制</div>
+    <div class="menu-item" onclick="recallMsg()" id="recallBtn">🗑️ 撤回</div>
+  </div>
+
+  <script>
+    const WT = {
+      currentUser: { id:'u001', name:'张明', avatar:'张' },
+      groupMembers: [
+        { id:'u001', name:'张明', avatar:'张', role:'admin' },
+        { id:'u002', name:'李婷', avatar:'李', role:'member' },
+        { id:'u003', name:'王磊', avatar:'王', role:'member' },
+        { id:'u004', name:'陈浩', avatar:'陈', role:'member' },
+        { id:'u005', name:'刘洋', avatar:'刘', role:'member' },
+      ],
+      messages: {
+        'c001': [
+          { id:'m001', sender:'u002', name:'李婷', avatar:'李', type:'text', content:'张明，在吗？', time:'10:00', status:'read' },
+          { id:'m002', sender:'u001', name:'张明', avatar:'张', type:'text', content:'在的，什么事？', time:'10:02', status:'read' },
+          { id:'m003', sender:'u002', name:'李婷', avatar:'李', type:'text', content:'产品需求文档我已经更新了，你看看', time:'10:03', status:'read' },
+          { id:'m004', sender:'u001', name:'张明', avatar:'张', type:'text', content:'好的，我看看有什么改动', time:'10:05', status:'read' },
+          { id:'m005', sender:'u002', name:'李婷', avatar:'李', type:'file', content: 'PRD_v2.0.docx', fileSize:'1.8MB', time:'10:06', status:'read' },
+          { id:'m006', sender:'u002', name:'李婷', avatar:'李', type:'text', content:'产品需求文档已更新', time:'10:30', status:'delivered' },
+        ],
+        'c002': [
+          { id:'m010', sender:'u003', name:'王磊', avatar:'王', type:'text', content:'新版原型已上传到共享盘', time:'09:30', status:'' },
+          { id:'m011', sender:'u004', name:'陈浩', avatar:'陈', type:'text', content:'收到，我去看看交互逻辑', time:'09:35', status:'' },
+          { id:'m012', sender:'u001', name:'张明', avatar:'张', type:'text', content:'@王磊 原型链接发一下', time:'09:40', status:'read', atUser:'王磊' },
+          { id:'m013', sender:'u003', name:'王磊', avatar:'王', type:'file', content:'原型设计v3.fig', fileSize:'12.5MB', time:'09:45', status:'' },
+          { id:'m014', sender:'u003', name:'王磊', avatar:'王', type:'text', content:'新原型已上传', time:'10:30', status:'' },
+        ],
+        'c003': [
+          { id:'m015', sender:'u004', name:'陈浩', avatar:'陈', type:'text', content:'明天的需求评审准备好了吗？', time:'08:30', status:'read' },
+          { id:'m016', sender:'u001', name:'张明', avatar:'张', type:'text', content:'准备好了，PPT已经做完', time:'08:45', status:'read' },
+          { id:'m017', sender:'u004', name:'陈浩', avatar:'陈', type:'text', content:'好的，明天开会讨论', time:'09:15', status:'read' },
+        ],
+      }
+    };
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const convId = urlParams.get('id') || 'c001';
+    const conv = WT.conversations ? WT.conversations.find(c => c.id === convId) : null;
+    const msgs = WT.messages[convId] || [];
+    const chatName = conv ? conv.name : (convId === 'c002' ? '产品设计组' : '李婷');
+
+    document.getElementById('chatTitle').textContent = chatName;
+    if (convId === 'c002') {
+      document.getElementById('memberCount').textContent = `(${WT.groupMembers.length}人)`;
+    }
+
+    function renderMessages() {
+      const container = document.getElementById('chatMessages');
+      let html = '<div class="msg-time-divider">今天 10:00</div>';
+      msgs.forEach(msg => {
+        const isSelf = msg.sender === WT.currentUser.id;
+        const avatarClass = isSelf ? 'self-av' : 'other';
+        let bubbleContent = '';
+
+        if (msg.type === 'text') {
+          let text = msg.content;
+          if (msg.atUser) text = text.replace(`@${msg.atUser}`, `<span class="msg-at">@${msg.atUser}</span>`);
+          bubbleContent += text;
+        } else if (msg.type === 'file') {
+          bubbleContent = `<div class="msg-file"><span class="file-icon">📄</span><div class="file-info"><div class="file-name">${msg.content}</div><div class="file-size">${msg.fileSize}</div></div></div>`;
+        } else if (msg.type === 'voice') {
+          bubbleContent = `<div class="voice-msg"><span class="voice-icon">🎤</span><span>${msg.duration}</span></div>`;
+        }
+
+        const statusIcon = msg.status === 'read' ? '✓✓' : msg.status === 'delivered' ? '✓✓' : '✓';
+        const statusColor = msg.status === 'read' ? 'var(--primary)' : 'var(--text-tertiary)';
+
+        html += `
+          <div class="msg-item ${isSelf ? 'self' : 'other'}" data-id="${msg.id}" oncontextmenu="showContextMenu(event, '${msg.id}', ${isSelf})">
+            <div class="msg-avatar ${avatarClass}">${msg.avatar}</div>
+            <div class="msg-body">
+              ${!isSelf ? `<div class="msg-sender">${msg.name}</div>` : ''}
+              <div class="msg-bubble">${bubbleContent}</div>
+              <div class="msg-status" style="color:${statusColor}">${statusIcon} ${msg.time}</div>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+      container.scrollTop = container.scrollHeight;
+    }
+
+    let selectedMsgId = null;
+    let selectedIsSelf = false;
+
+    function showContextMenu(e, msgId, isSelf) {
+      e.preventDefault();
+      selectedMsgId = msgId;
+      selectedIsSelf = isSelf;
+      const menu = document.getElementById('contextMenu');
+      document.getElementById('recallBtn').style.display = isSelf ? 'block' : 'none';
+      menu.style.display = 'block';
+      menu.style.left = e.clientX + 'px';
+      menu.style.top = e.clientY + 'px';
+    }
+
+    document.addEventListener('click', () => { document.getElementById('contextMenu').style.display = 'none'; });
+
+    function replyMsg() {
+      const msg = msgs.find(m => m.id === selectedMsgId);
+      if (msg) { document.getElementById('msgInput').value = `> ${msg.name}: ${msg.content}\n`; document.getElementById('msgInput').focus(); }
+    }
+    function forwardMsg() { alert('转发功能（演示）'); }
+    function copyMsg() { const msg = msgs.find(m => m.id === selectedMsgId); if (msg) navigator.clipboard?.writeText(msg.content); }
+    function recallMsg() { alert('消息已撤回（演示）'); }
+
+    function toggleFuncPanel() { document.getElementById('funcPanel').classList.toggle('show'); }
+
+    function sendMessage() {
+      const input = document.getElementById('msgInput');
+      const text = input.value.trim();
+      if (!text) return;
+      const newMsg = {
+        id: 'm' + Date.now(), sender: WT.currentUser.id, name: WT.currentUser.name,
+        avatar: WT.currentUser.avatar, type: 'text', content: text,
+        time: new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit' }), status:'sent'
+      };
+      msgs.push(newMsg);
+      input.value = '';
+      input.style.height = 'auto';
+      renderMessages();
+    }
+
+    function handleKeyDown(e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    }
+
+    function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
+
+    renderMessages();
+  </script>
+</body>
+</html>

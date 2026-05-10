@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WorkTalk - 我</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <nav class="sidebar">
+      <div style="padding:16px;text-align:center;border-bottom:1px solid var(--border);">
+        <h1 style="font-size:18px;color:var(--primary);">💼 WorkTalk</h1>
+      </div>
+      <div style="flex:1;padding:8px 0;">
+        <a href="index.html" style="display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:14px;color:var(--text-secondary);">💬 消息</a>
+        <a href="contacts.html" style="display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:14px;color:var(--text-secondary);">👥 通讯录</a>
+        <a href="profile.html" style="display:flex;align-items:center;gap:10px;padding:10px 20px;background:var(--primary-light);color:var(--primary);font-size:14px;">👤 我</a>
+      </div>
+    </nav>
+
+    <div class="main-content">
+      <div class="header"><h1>我</h1></div>
+      <div style="flex:1;overflow-y:auto;">
+        <div class="profile-header">
+          <div class="profile-avatar" id="userAvatar">张</div>
+          <div class="profile-name" id="userName">张明</div>
+          <div class="profile-id" id="userId">ID: WT-001234</div>
+          <div class="profile-status" onclick="changeStatus()">
+            <span>🟢</span> <span id="userStatus">在线</span> ▾
+          </div>
+        </div>
+
+        <div class="profile-menu">
+          <div class="menu-group">
+            <div class="profile-menu-item" onclick="alert('个人信息编辑')">
+              <span class="menu-icon">👤</span>
+              <span class="menu-text">个人信息</span>
+              <span class="menu-arrow">›</span>
+            </div>
+            <div class="profile-menu-item">
+              <span class="menu-icon">🔐</span>
+              <span class="menu-text">账号安全</span>
+              <span class="menu-arrow">›</span>
+            </div>
+            <div class="profile-menu-item">
+              <span class="menu-icon">🔔</span>
+              <span class="menu-text">通知设置</span>
+              <span class="menu-arrow">›</span>
+            </div>
+          </div>
+
+          <div class="menu-group">
+            <div class="menu-group-title">通用</div>
+            <div class="profile-menu-item">
+              <span class="menu-icon">🌙</span>
+              <span class="menu-text">深色模式</span>
+              <span class="menu-value">关闭</span>
+              <span class="menu-arrow">›</span>
+            </div>
+            <div class="profile-menu-item">
+              <span class="menu-icon">🔤</span>
+              <span class="menu-text">字体大小</span>
+              <span class="menu-value">标准</span>
+              <span class="menu-arrow">›</span>
+            </div>
+            <div class="profile-menu-item">
+              <span class="menu-icon">🌐</span>
+              <span class="menu-text">语言</span>
+              <span class="menu-value">简体中文</span>
+              <span class="menu-arrow">›</span>
+            </div>
+          </div>
+
+          <div class="menu-group">
+            <div class="menu-group-title">存储</div>
+            <div class="profile-menu-item">
+              <span class="menu-icon">💾</span>
+              <span class="menu-text">存储管理</span>
+              <span class="menu-value">856MB</span>
+              <span class="menu-arrow">›</span>
+            </div>
+            <div class="profile-menu-item">
+              <span class="menu-icon">🧹</span>
+              <span class="menu-text">清理缓存</span>
+              <span class="menu-value">218MB</span>
+              <span class="menu-arrow">›</span>
+            </div>
+          </div>
+
+          <div class="menu-group">
+            <div class="menu-group-title">关于</div>
+            <div class="profile-menu-item">
+              <span class="menu-icon">ℹ️</span>
+              <span class="menu-text">关于WorkTalk</span>
+              <span class="menu-value">v1.0.0</span>
+              <span class="menu-arrow">›</span>
+            </div>
+            <div class="profile-menu-item">
+              <span class="menu-icon">📞</span>
+              <span class="menu-text">联系客服</span>
+              <span class="menu-arrow">›</span>
+            </div>
+          </div>
+
+          <div style="padding:20px 16px;">
+            <button class="btn btn-outline" style="width:100%;" onclick="alert('已退出登录')">退出登录</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <a href="index.html" class="tab"><span class="tab-icon">💬</span><span>消息</span></a>
+    <a href="contacts.html" class="tab"><span class="tab-icon">👥</span><span>通讯录</span></a>
+    <a href="profile.html" class="tab active"><span class="tab-icon">👤</span><span>我</span></a>
+  </div>
+
+  <script>
+    function changeStatus() {
+      const statuses = ['在线', '忙碌', '离开', '请勿打扰'];
+      const icons = ['🟢', '🔴', '🟡', '⛔'];
+      const current = document.getElementById('userStatus').textContent;
+      const idx = (statuses.indexOf(current) + 1) % statuses.length;
+      document.getElementById('userStatus').textContent = statuses[idx];
+      document.querySelector('.profile-status span:first-child').textContent = icons[idx];
+    }
+  </script>
+</body>
+</html>
